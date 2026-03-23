@@ -1,0 +1,38 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xargs grep:*)",
+      "Bash(grep -r \"getContext\\\\|toDataURL\\\\|getImageData\" /e/BotTest/puppeteer-extra/packages/puppeteer-extra-plugin-stealth --include=*.js)",
+      "Bash(grep -r \"Array.prototype\\\\|Object.prototype\\\\|Function.prototype\" /e/BotTest/puppeteer-extra/packages/puppeteer-extra-plugin-stealth --include=*.js)",
+      "Bash(find /E/BotTest/puppeteer-extra/packages/puppeteer-extra-plugin-stealth -name *.md -type f)",
+      "Bash(for dir:*)",
+      "Bash(do echo:*)",
+      "Read(//e/BotTest/puppeteer-extra/packages/puppeteer-extra-plugin-stealth/evasions/**)",
+      "Bash(done)",
+      "Bash(xargs wc:*)",
+      "Bash(grep -r \"visibilityState\\\\|hidden\\\\|visibilitychange\" /e/BotTest/puppeteer-extra/packages/puppeteer-extra-plugin-stealth --include=*.js -l)",
+      "Bash(git -C /e/BotTest/puppeteer-extra log --oneline --all --grep=\"Native Client\\\\|plugin\\\\|consistency\")",
+      "Bash(grep -n \"pdfViewerEnabled\\\\|visibilityState\\\\|width\\\\|languages\" packages/puppeteer-extra-plugin-stealth/evasions/*/index.js)",
+      "Bash(grep -r \"pdfViewerEnabled\\\\|visibilityState\" /e/BotTest/puppeteer-extra/packages/puppeteer-extra-plugin-stealth/evasions --include=*.test.js)",
+      "Bash(find /E/BotTest/puppeteer-extra -type d -name *stealth*)",
+      "Bash(grep -r \"test.skip\\\\|\\\\.skip\\(\" /e/BotTest/puppeteer-extra/packages/puppeteer-extra-plugin-stealth/evasions --include=*.test.js)",
+      "Bash(grep -r \"maxTouchPoints\\\\|webkitTemporaryStorage\\\\|StorageManager\\\\|navigator.bluetooth\\\\|performance.memory\" packages/puppeteer-extra-plugin-stealth --include=*.js)",
+      "Bash(ls -d /E/BotTest/puppeteer-extra/packages/puppeteer-extra-plugin-stealth/evasions/*/)",
+      "Bash(grep -v \"^$\")",
+      "Bash(node -c /E/BotTest/puppeteer-extra/packages/puppeteer-extra-plugin-stealth/evasions/font.fingerprint/index.js)",
+      "Bash(for f:*)",
+      "Bash(do node:*)",
+      "Bash(echo \"ERROR in $f\")",
+      "Bash(find /tmp -type d -name *stealth*)",
+      "Bash(ls -d \"E:/BotTest/puppeteer-extra/packages/puppeteer-extra-plugin-stealth/evasions\"/*/)",
+      "Bash(__NEW_LINE_c9298530f83b3832__ grep:*)",
+      "Bash(__NEW_LINE_d874daedbefc7022__ grep:*)",
+      "Bash(find:*)",
+      "Bash(git add:*)"
+    ]
+  },
+  "enabledMcpjsonServers": [
+    "refractbot",
+    "botengine"
+  ]
+}

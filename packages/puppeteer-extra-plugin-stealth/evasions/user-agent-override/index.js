@@ -2,6 +2,8 @@
 
 const { PuppeteerExtraPlugin } = require('puppeteer-extra-plugin')
 
+const withUtils = require('../_utils/withUtils')
+
 /**
  * Fixes the UserAgent info (composed of UA string, Accept-Language, Platform, and UA hints).
  *
@@ -180,11 +182,57 @@ class Plugin extends PuppeteerExtraPlugin {
     const client =
       typeof page._client === 'function' ? page._client() : page._client
     client.send('Network.setUserAgentOverride', override)
+
+    // Also mock navigator.userAgentData.getHighEntropyValues() in the page context
+    // CDP only sets the synchronous brands property, but detection services call
+    // getHighEntropyValues() which returns a Promise with detailed platform info
+    const highEntropyData = {
+      brands: _getBrands(),
+      fullVersionList: _getBrands().map(b => ({
+        brand: b.brand,
+        version: b.version === '99' ? '99.0.0.0' : uaVersion
+      })),
+      platform: _getPlatform(true),
+      platformVersion: _getPlatformVersion(),
+      architecture: _getPlatformArch(),
+      bitness: _getMobile() ? '' : '64',
+      model: _getPlatformModel(),
+      mobile: _getMobile(),
+      wow64: false
+    }
+
+    await withUtils(page).evaluateOnNewDocument(
+      (utils, { data }) => {
+        if (typeof NavigatorUAData !== 'undefined') {
+          utils.replaceWithProxy(
+            NavigatorUAData.prototype,
+            'getHighEntropyValues',
+            {
+              apply(target, ctx, args) {
+                // Return a Promise with the requested hints
+                const hints = args[0] || []
+                const result = {
+                  brands: data.brands,
+                  mobile: data.mobile
+                }
+                for (const hint of hints) {
+                  if (hint in data) {
+                    result[hint] = data[hint]
+                  }
+                }
+                return Promise.resolve(result)
+              }
+            }
+          )
+        }
+      },
+      { data: highEntropyData }
+    )
   }
 
   async beforeLaunch(options) {
-    // Check if launched headless
-    this._headless = options.headless
+    // Check if launched headless (handles both boolean true and string "new" for Chrome 112+)
+    this._headless = options.headless !== false
   }
 
   async beforeConnect() {

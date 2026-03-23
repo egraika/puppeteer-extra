@@ -5,13 +5,17 @@ const { PuppeteerExtraPlugin } = require('puppeteer-extra-plugin')
 const withUtils = require('../_utils/withUtils')
 
 /**
- * Fix WebGL Vendor/Renderer being set to Google in headless mode
+ * Fix WebGL Vendor/Renderer being set to Google in headless mode.
  *
- * Example data (Apple Retina MBP 13): {vendor: "Intel Inc.", renderer: "Intel(R) Iris(TM) Graphics 6100"}
+ * Modern Chrome uses ANGLE for WebGL rendering and reports vendor/renderer
+ * strings in a different format than older versions.
+ *
+ * Default values updated to match modern ANGLE-based rendering on Windows,
+ * which is the most common platform.
  *
  * @param {Object} [opts] - Options
- * @param {string} [opts.vendor] - The vendor string to use (default: `Intel Inc.`)
- * @param {string} [opts.renderer] - The renderer string (default: `Intel Iris OpenGL Engine`)
+ * @param {string} [opts.vendor] - The vendor string to use (default: `Google Inc. (Intel)`)
+ * @param {string} [opts.renderer] - The renderer string (default: `ANGLE (Intel, Intel(R) UHD Graphics 630 Direct3D11 vs_5_0 ps_5_0, D3D11)`)
  */
 class Plugin extends PuppeteerExtraPlugin {
   constructor(opts = {}) {
@@ -31,11 +35,14 @@ class Plugin extends PuppeteerExtraPlugin {
           const result = utils.cache.Reflect.apply(target, ctx, args)
           // UNMASKED_VENDOR_WEBGL
           if (param === 37445) {
-            return opts.vendor || 'Intel Inc.' // default in headless: Google Inc.
+            return opts.vendor || 'Google Inc. (Intel)'
           }
           // UNMASKED_RENDERER_WEBGL
           if (param === 37446) {
-            return opts.renderer || 'Intel Iris OpenGL Engine' // default in headless: Google SwiftShader
+            return (
+              opts.renderer ||
+              'ANGLE (Intel, Intel(R) UHD Graphics 630 Direct3D11 vs_5_0 ps_5_0, D3D11)'
+            )
           }
           return result
         }

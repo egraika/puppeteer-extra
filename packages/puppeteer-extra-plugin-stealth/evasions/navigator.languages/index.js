@@ -24,7 +24,27 @@ class Plugin extends PuppeteerExtraPlugin {
     }
   }
 
+  get requirements() {
+    return new Set(['dataFromPlugins'])
+  }
+
   async onPageCreated(page) {
+    // Try to sync with the locale set by user-agent-override via plugin data
+    let resolvedLanguages = this.opts.languages
+    if (!resolvedLanguages || !resolvedLanguages.length) {
+      // Check if user-agent-override has set a locale via data sharing
+      const uaData = this.getDataFromPlugins('userPreferences')
+        .map(d => d.value)
+      const uaLocale =
+        uaData.length > 0 && uaData[0].intl
+          ? uaData[0].intl.accept_languages
+          : null
+      if (uaLocale) {
+        // Convert 'de-DE,de' format to ['de-DE', 'de'] array
+        resolvedLanguages = uaLocale.split(',').map(l => l.trim())
+      }
+    }
+
     await withUtils(page).evaluateOnNewDocument(
       (utils, { opts }) => {
         const languages = opts.languages.length
@@ -35,9 +55,18 @@ class Plugin extends PuppeteerExtraPlugin {
           'languages',
           utils.makeHandler().getterValue(Object.freeze([...languages]))
         )
+        // Also set navigator.language (singular) to match languages[0]
+        // Detection services check navigator.language === navigator.languages[0]
+        utils.replaceGetterWithProxy(
+          Object.getPrototypeOf(navigator),
+          'language',
+          utils.makeHandler().getterValue(languages[0])
+        )
       },
       {
-        opts: this.opts
+        opts: {
+          languages: resolvedLanguages || this.opts.languages
+        }
       }
     )
   }

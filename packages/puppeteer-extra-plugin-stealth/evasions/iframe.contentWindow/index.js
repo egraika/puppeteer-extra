@@ -48,6 +48,14 @@ class Plugin extends PuppeteerExtraPlugin {
                 return undefined
               }
               return Reflect.get(target, key)
+            },
+            ownKeys(target) {
+              // Delegate to the real window's ownKeys to avoid exposing
+              // unexpected Proxy-related properties
+              return Reflect.ownKeys(target)
+            },
+            getOwnPropertyDescriptor(target, prop) {
+              return Reflect.getOwnPropertyDescriptor(target, prop)
             }
           }
 

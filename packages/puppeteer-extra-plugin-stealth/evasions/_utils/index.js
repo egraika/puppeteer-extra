@@ -171,7 +171,18 @@ utils.preloadCache = () => {
       apply: Reflect.apply.bind(Reflect)
     },
     // Used in `makeNativeString`
-    nativeToStringStr: Function.toString + '' // => `function toString() { [native code] }`
+    nativeToStringStr: Function.toString + '', // => `function toString() { [native code] }`
+
+    // Cache additional native functions that detection scripts might instrument.
+    // By caching these before any page scripts run, we prevent detection via
+    // instrumented versions of these functions.
+    // Note: evaluateOnNewDocument is guaranteed by Chromium to run before ANY
+    // page scripts (including inline <script> tags), so pre-capture attacks
+    // from the page are not possible. The only risk is Chrome extensions'
+    // content scripts, which run in an isolated world not accessible to websites.
+    getOwnPropertyDescriptor: Object.getOwnPropertyDescriptor.bind(Object),
+    getPrototypeOf: Object.getPrototypeOf.bind(Object),
+    defineProperty: Object.defineProperty.bind(Object)
   }
 }
 
@@ -335,7 +346,26 @@ utils.replaceWithProxy = (obj, propName, handler) => {
  * @param {object} handler - The JS Proxy handler to use
  */
 utils.replaceGetterWithProxy = (obj, propName, handler) => {
-  const fn = Object.getOwnPropertyDescriptor(obj, propName).get
+  const descriptor = Object.getOwnPropertyDescriptor(obj, propName)
+
+  if (!descriptor || !descriptor.get) {
+    // Property doesn't exist or isn't a getter (e.g., navigator.pdfViewerEnabled
+    // on Chrome < 94). Define it as a new getter using the handler's apply trap.
+    const proxyObj = new Proxy(
+      function () {},
+      utils.stripProxyFromErrors(handler)
+    )
+    Object.defineProperty(obj, propName, {
+      get: proxyObj,
+      set: function (v) {},
+      enumerable: true,
+      configurable: true
+    })
+    utils.patchToString(proxyObj, `function get ${propName}() { [native code] }`)
+    return true
+  }
+
+  const fn = descriptor.get
   const fnStr = fn.toString() // special getter function string
   const proxyObj = new Proxy(fn, utils.stripProxyFromErrors(handler))
 

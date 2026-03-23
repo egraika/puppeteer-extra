@@ -48,7 +48,18 @@ class Plugin extends PuppeteerExtraPlugin {
 
         // Plugin and MimeType cross-reference each other, let's do that now
         // Note: We're looping through `data.plugins` here, not the generated `plugins`
+        // Cache Proxy instances per plugin so that identity checks pass:
+        // mimeType.enabledPlugin === mimeType.enabledPlugin must be true
+        const pluginProxyCache = {}
         for (const pluginData of data.plugins) {
+          // Create one cached Proxy per plugin to prevent circular references
+          // while ensuring referential equality on repeated access
+          if (!pluginProxyCache[pluginData.name]) {
+            pluginProxyCache[pluginData.name] = new Proxy(
+              plugins[pluginData.name],
+              {}
+            )
+          }
           pluginData.__mimeTypes.forEach((type, index) => {
             plugins[pluginData.name][index] = mimeTypes[type]
 
@@ -59,10 +70,7 @@ class Plugin extends PuppeteerExtraPlugin {
               configurable: true
             })
             Object.defineProperty(mimeTypes[type], 'enabledPlugin', {
-              value:
-                type === 'application/x-pnacl'
-                  ? mimeTypes['application/x-nacl'].enabledPlugin // these reference the same plugin, so we need to re-use the Proxy in order to avoid leaks
-                  : new Proxy(plugins[pluginData.name], {}), // Prevent circular references
+              value: pluginProxyCache[pluginData.name], // Cached Proxy for referential equality
               writable: false,
               enumerable: false, // Important: `JSON.stringify(navigator.plugins)`
               configurable: true

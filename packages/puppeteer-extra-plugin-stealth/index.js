@@ -92,10 +92,27 @@ class StealthPlugin extends PuppeteerExtraPlugin {
       'navigator.permissions',
       'navigator.plugins',
       'navigator.webdriver',
+      'navigator.vendor',
+      'navigator.deviceMemory',
       'sourceurl',
       'user-agent-override',
       'webgl.vendor',
-      'window.outerdimensions'
+      'window.outerdimensions',
+      'canvas.fingerprint',
+      'audio.fingerprint',
+      'font.fingerprint',
+      'screen.properties',
+      'webrtc.leak',
+      'cdp.detection',
+      'document.hasFocus',
+      'navigator.connection',
+      'document.visibility',
+      'speech.synthesis',
+      'navigator.pdfViewerEnabled',
+      'matchMedia.preferences',
+      'navigator.maxTouchPoints',
+      'navigator.onLine',
+      'history.length'
     ])
     return {
       availableEvasions,
@@ -158,7 +175,7 @@ class StealthPlugin extends PuppeteerExtraPlugin {
   async onBrowser(browser) {
     if (browser && browser.setMaxListeners) {
       // Increase event emitter listeners to prevent MaxListenersExceededWarning
-      browser.setMaxListeners(30)
+      browser.setMaxListeners(100)
     }
   }
 }

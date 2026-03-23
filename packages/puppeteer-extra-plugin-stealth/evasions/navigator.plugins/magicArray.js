@@ -134,7 +134,15 @@ module.exports.generateMagicArray = (utils, fns) =>
       },
       getOwnPropertyDescriptor(target, prop) {
         if (prop === 'length') {
-          return undefined
+          // Real Chrome returns a proper descriptor for length, not undefined.
+          // Returning undefined here is a guaranteed detection vector via:
+          // Object.getOwnPropertyDescriptor(navigator.mimeTypes, 'length')
+          return {
+            value: magicArray.length,
+            writable: false,
+            enumerable: false,
+            configurable: true
+          }
         }
         return Reflect.getOwnPropertyDescriptor(target, prop)
       }
